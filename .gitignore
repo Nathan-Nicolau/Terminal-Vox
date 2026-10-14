@@ -1,0 +1,12 @@
+# Repositório clonado e binários pesados (gerados pelo install.sh)
+whisper.cpp/
+
+# Arquivos temporários e de gravação
+/tmp/voice_*
+*.wav
+*.pid
+__pycache__/
+*.pyc
+
+# Configurações locais
+.config/
