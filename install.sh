@@ -78,8 +78,10 @@ if [ ! -f "$DIR/whisper.cpp/models/ggml-base.bin" ]; then
     cd "$DIR"
 fi
 
-# 6. Permissões de Execução
+# 6. Permissões de Execução e Ativação Padrão
 chmod +x "$DIR/voice_toggle.sh" "$DIR/voice_master_switch.sh" "$DIR/record_and_transcribe.py" "$DIR/terminalvox_hud.py"
+mkdir -p "$HOME/.config/terminalvox"
+touch "$HOME/.config/terminalvox/enabled"
 
 echo "=================================================="
 echo "✅ Instalação concluída com sucesso!"
