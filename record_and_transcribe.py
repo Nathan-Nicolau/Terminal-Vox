@@ -38,11 +38,9 @@ TECH_PROMPT = "Comandos de terminal, código, git, branch, commit, merge, master
 import shutil
 
 def notify(title: str, message: str, icon: str = "dialog-information"):
-    if shutil.which("notify-send"):
-        try:
-            subprocess.run(["notify-send", "-a", "TerminalVox", "-i", icon, title, message], check=False)
-        except Exception:
-            pass
+    # As mensagens agora são exibidas visualmente no HUD (TerminalVox HUD).
+    # Notificações do SO são reservadas exclusivamente para ativar/desativar a chave mestre.
+    pass
 
 def copy_to_clipboard(text: str) -> bool:
     # 1. Wayland (wl-copy)
@@ -89,38 +87,39 @@ def copy_to_clipboard(text: str) -> bool:
 
 def paste_to_terminal() -> bool:
     """Injeta Ctrl+Shift+V de acordo com o servidor gráfico (Wayland ou X11)."""
-    time.sleep(0.15)  # Dá tempo do clipboard registrar o novo conteúdo
+    time.sleep(0.2)  # Dá tempo do clipboard registrar o novo conteúdo
     session = os.environ.get("XDG_SESSION_TYPE", "").lower()
 
-    # Em sessões X11 ou quando xdotool estiver presente
-    if session == "x11" or shutil.which("xdotool"):
-        try:
-            proc = subprocess.run(["xdotool", "key", "ctrl+shift+v"],
-                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
-            if proc.returncode == 0:
-                return True
-        except Exception:
-            pass
+    # 1. No Wayland: prioridade obrigatória para ydotool / wtype
+    if session == "wayland":
+        if shutil.which("ydotool"):
+            try:
+                proc = subprocess.run(["ydotool", "key", "ctrl+shift+v"], 
+                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                if proc.returncode == 0:
+                    return True
+            except Exception:
+                pass
 
-    # Em sessões Wayland usando ydotool
-    if shutil.which("ydotool"):
-        try:
-            proc = subprocess.run(["ydotool", "key", "ctrl+shift+v"], 
-                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
-            if proc.returncode == 0:
-                return True
-        except Exception:
-            pass
+        if shutil.which("wtype"):
+            try:
+                proc = subprocess.run(["wtype", "-M", "ctrl", "-M", "shift", "v"],
+                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                if proc.returncode == 0:
+                    return True
+            except Exception:
+                pass
 
-    # Wayland alternativo via wtype
-    if shutil.which("wtype"):
-        try:
-            proc = subprocess.run(["wtype", "-M", "ctrl", "-M", "shift", "v"],
-                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
-            if proc.returncode == 0:
-                return True
-        except Exception:
-            pass
+    # 2. No X11: usa xdotool nativo
+    else:
+        if shutil.which("xdotool"):
+            try:
+                proc = subprocess.run(["xdotool", "key", "ctrl+shift+v"],
+                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+                if proc.returncode == 0:
+                    return True
+            except Exception:
+                pass
 
     return False
 
@@ -173,6 +172,19 @@ def stop_and_process():
     except OSError:
         pass
 
+def stop_recording_and_transcribe() -> str:
+    """Interrompe gravação, transcreve com Whisper e copia para a área de transferência."""
+    if not os.path.exists(PID_FILE):
+        return ""
+
+    with open(PID_FILE, "r") as f:
+        pid = int(f.read().strip())
+
+    try:
+        os.remove(PID_FILE)
+    except OSError:
+        pass
+
     # Interrompe o processo de gravação suavemente e aguarda flush do arquivo
     try:
         os.kill(pid, signal.SIGINT)
@@ -185,11 +197,8 @@ def stop_and_process():
     except ProcessLookupError:
         pass
 
-    notify("⏳ Transcrevendo...", "Processando voz com Whisper local...", "audio-volume-medium")
-
     # Transcrição via whisper-cli
     if not os.path.exists(AUDIO_FILE):
-        notify("❌ Erro", "Arquivo de áudio não foi gerado.", "dialog-error")
         return ""
 
     cmd = [
@@ -209,30 +218,22 @@ def stop_and_process():
     try:
         res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
         text = res.stdout.strip()
-    except Exception as e:
-        notify("❌ Erro na transcrição", str(e), "dialog-error")
+    except Exception:
         return ""
 
-    if not text:
-        notify("⚠️ Vazio", "Nenhuma fala detectada.", "dialog-warning")
-        return ""
+    if text:
+        with open("/tmp/voice_input_last.txt", "w", encoding="utf-8") as f:
+            f.write(text)
+        copy_to_clipboard(text)
+        print(f"[✓] Transcrição: {text}")
 
-    # Salva sempre no arquivo temporário para histórico e recuperação rápida
-    with open("/tmp/voice_input_last.txt", "w", encoding="utf-8") as f:
-        f.write(text)
+    return text
 
-    # Copia para área de transferência e injeta no terminal
-    has_wl_copy = copy_to_clipboard(text)
-    pasted = paste_to_terminal()
-
-    if pasted:
-        notify("✅ Colado com sucesso!", f"\"{text}\"\n(Pressione Enter para enviar)", "emblem-default")
-    elif has_wl_copy:
-        notify("✅ Copiado!", f"\"{text}\"\n(Pressione Ctrl+Shift+V)", "emblem-default")
-    else:
-        notify("⚠️ Falta wl-clipboard", f"Texto: \"{text}\"", "dialog-warning")
-
-    print(f"[✓] Transcrição: {text}")
+def stop_and_process() -> str:
+    """Modo completo: para, transcreve, copia e cola no terminal."""
+    text = stop_recording_and_transcribe()
+    if text:
+        paste_to_terminal()
     return text
 
 def toggle():

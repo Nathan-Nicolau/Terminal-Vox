@@ -54,31 +54,27 @@ The script automatically:
 
 ## 🎯 Usage (Dual Shortcut System)
 
-TerminalVox is controlled via two keyboard shortcuts:
+TerminalVox operates with an intuitive, secure **2-shortcut workflow**:
 
-```mermaid
-flowchart TD
-    A["Atalho 1: Master Switch<br>(Super + Alt + V)"] -->|Ativar| B["Modo de Voz ATIVADO 🎙️"]
-    A -->|Desativar| C["Modo de Voz DESATIVADO 🔇<br>(Atalho 2 fica inerte)"]
-    B --> D["Atalho 2: Gravar / Colar<br>(Tecla F8 ou Pause)"]
-    D -->|1º Toque| E["Grava áudio do microfone"]
-    E -->|2º Toque| F["Transcreve via Whisper local"]
-    F --> G["Injeta texto no cursor do terminal ativo"]
-```
-
-### 1. Master Switch (Ligar / Desligar Modo de Voz)
+### Step 1: Turn On the Master Switch (Ativação)
+* **Shortcut:** `Super + Alt + V` (or `F7`)
 * **Command:** `~/TerminalVox/voice_master_switch.sh`
-* **Suggested Hotkey:** `Super + Alt + V` or `F7`
-* **Behavior:** Toggles the voice input state. When disabled, the recording hotkey is completely silent and does nothing.
+* **What happens:**
+  * Displays a system notification: **🎙️ TerminalVox ATIVADO**.
+  * The recording hotkey is now unlocked and ready for use.
+  * *(Pressing it again turns the system off: **🔇 TerminalVox DESATIVADO**, completely disabling the microphone and recording hotkey to prevent accidental triggers).*
 
-### 2. Record & Paste (Gravar e Injetar)
+### Step 2: Speak and Inject (Gravar e Injetar)
+* **Shortcut:** `F8` (or `Pause`)
 * **Command:** `~/TerminalVox/voice_toggle.sh`
-* **Suggested Hotkey:** `F8` or `Pause`
-* **Behavior:** 
-  * Tap once $\rightarrow$ Starts recording (notification: *🎙️ Gravando...*).
-  * Speak your command.
-  * Tap again $\rightarrow$ Transcribes locally and pastes the text directly into your terminal cursor.
-  * Hit `Enter` to execute/send to your AI agent!
+* **How to use:**
+  1. **Press the hotkey once:** The floating HUD pill appears in the top-right corner, displaying live audio waves that react to your voice in real time.
+  2. **Speak naturally:** Dictate your programming instructions, git commands, or questions for your AI agent.
+  3. **Press the hotkey again:**
+     * The HUD switches to a processing spinner while transcribing locally with Whisper.
+     * Displays a quick visual preview of the transcribed text (`✓ Texto Transcrito!`).
+     * The HUD closes smoothly and **automatically pastes the text directly into your terminal prompt**.
+  4. **Press `Enter`** to submit the prompt to your terminal or AI agent!
 
 ---
 

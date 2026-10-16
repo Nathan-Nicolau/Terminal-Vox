@@ -7,4 +7,11 @@ if [ ! -f "$ENABLED_FLAG" ]; then
 fi
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-exec python3 "$DIR/record_and_transcribe.py" --toggle
+
+# Se houver display gráfico ativo, abre o HUD moderno com ondas de áudio e status
+if [ -n "$WAYLAND_DISPLAY" ] || [ -n "$DISPLAY" ]; then
+    exec python3 "$DIR/terminalvox_hud.py"
+else
+    # Fallback para ambiente puramente headless/SSH
+    exec python3 "$DIR/record_and_transcribe.py" --toggle
+fi

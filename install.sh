@@ -29,19 +29,19 @@ install_packages() {
     if command -v apt-get >/dev/null 2>&1; then
         sudo apt-get update
         sudo apt-get install -y git build-essential cmake curl libnotify-bin ffmpeg \
-            wl-clipboard ydotool xclip xdotool || true
+            python3-gi gir1.2-gtk-4.0 wl-clipboard ydotool xclip xdotool || true
     elif command -v dnf >/dev/null 2>&1; then
         sudo dnf install -y git gcc gcc-c++ make cmake curl libnotify ffmpeg \
-            wl-clipboard ydotool xclip xdotool || true
+            python3-gobject gtk4 wl-clipboard ydotool xclip xdotool || true
     elif command -v pacman >/dev/null 2>&1; then
         sudo pacman -Sy --noconfirm git base-devel cmake curl libnotify ffmpeg \
-            wl-clipboard ydotool xclip xdotool || true
+            python-gobject gtk4 wl-clipboard ydotool xclip xdotool || true
     elif command -v zypper >/dev/null 2>&1; then
         sudo zypper install -y git gcc gcc-c++ make cmake curl libnotify-tools ffmpeg \
-            wl-clipboard ydotool xclip xdotool || true
+            python3-gobject gtk4 wl-clipboard ydotool xclip xdotool || true
     else
         echo "[!] Gerenciador de pacotes não reconhecido automaticamente."
-        echo "    Certifique-se de ter instalado: git, make, cmake, gcc/g++, ffmpeg, wl-clipboard/xclip, ydotool/xdotool."
+        echo "    Certifique-se de ter instalado: git, make, cmake, gcc/g++, ffmpeg, python-gobject, gtk4, wl-clipboard/xclip, ydotool/xdotool."
     fi
 }
 
@@ -79,7 +79,7 @@ if [ ! -f "$DIR/whisper.cpp/models/ggml-base.bin" ]; then
 fi
 
 # 6. Permissões de Execução
-chmod +x "$DIR/voice_toggle.sh" "$DIR/voice_master_switch.sh" "$DIR/record_and_transcribe.py"
+chmod +x "$DIR/voice_toggle.sh" "$DIR/voice_master_switch.sh" "$DIR/record_and_transcribe.py" "$DIR/terminalvox_hud.py"
 
 echo "=================================================="
 echo "✅ Instalação concluída com sucesso!"
